@@ -16,6 +16,7 @@ Built as a learning project, so every design decision is explained in the source
 - **Entropy scoring** — information-theoretic optimal guesses with auto mode-switching
 - **Letter analysis panel** — coverage % per letter, best letter per position
 - **Timing output** on every filter and score operation
+- **An in the makings website for easier UI* https://github.com/Krille1937/Wordle-Solver-Website
 
 ---
 
