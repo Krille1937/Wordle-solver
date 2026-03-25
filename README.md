@@ -11,9 +11,9 @@ Built as a learning project, so every design decision is explained in the source
 ## Features
 
 - **6,787-word dictionary** sourced from the system English dictionary
-- **Correct duplicate-letter handling** — the edge case most solvers get wrong
-- **Letter-frequency scoring** (v1/v2) — fast heuristic covering the most common letters
-- **Entropy scoring** (v3) — information-theoretic optimal guesses with auto mode-switching
+- **Correct duplicate-letter handling**
+- **Letter-frequency scoring** — fast heuristic covering the most common letters
+- **Entropy scoring** — information-theoretic optimal guesses with auto mode-switching
 - **Letter analysis panel** — coverage % per letter, best letter per position
 - **Timing output** on every filter and score operation
 
@@ -23,11 +23,7 @@ Built as a learning project, so every design decision is explained in the source
 
 ```
 wordle-solver/
-├── v1/
-│   └── WordleSolver.java     # HashMap constraints, frequency scoring, ~1k words
-├── v2/
-│   └── WordleSolver.java     # int[] primitives, 6,787 words, analyze command
-├── v3/
+├── src
 │   └── WordleSolver.java     # Entropy scoring, auto mode-switching
 ├── words.txt                 # Shared 6,787-word dictionary
 └── README.md
@@ -41,14 +37,6 @@ wordle-solver/
 
 - Java 21+
 - IntelliJ IDEA (or any IDE / terminal)
-
-### IntelliJ Setup
-
-1. **File → New Project → Java** (no frameworks needed)
-2. Set SDK to **Java 21**
-3. Copy `words.txt` into the **project root**
-4. Add the version of `WordleSolver.java` you want to the `src/` folder
-5. **Run → Edit Configurations → Program Arguments** → set `words.txt`
 
 ### Command Line
 
@@ -114,77 +102,6 @@ Result: XGYXX
 | `quit`    | Exit                                          |
 
 ---
-
-## The Three Versions
-
-### v1 — Baseline
-
-The foundation. Gets the constraint logic right, including duplicate letters.
-
-**Data structures:**
-```java
-char[]                           green            // confirmed positions
-Map<Character, Integer>          minCount         // min occurrences per letter
-Map<Character, Integer>          maxCount         // max occurrences (for duplicates)
-Map<Character, Set<Integer>>     forbiddenPos     // Yellow: banned positions
-List<String>                     remaining        // rebuilt each round via stream
-```
-
-**Scoring:** For each remaining word, count how many candidates contain each letter.
-Score every dictionary word by summing those counts for its unique letters. Highest score = best coverage.
-
----
-
-### v2 — Efficiency
-
-Same logic, faster data structures, and a much larger word list.
-
-**Key changes:**
-
-| What | v1 | v2 |
-|------|----|----|
-| Word list | ~1,000 words | 6,787 words |
-| Constraint state | `HashMap<Character, ...>` | `int[26]` / `boolean[5][26]` |
-| Letter frequencies | Built per-filter-call | Pre-computed `byte[N][26]` at startup |
-| Candidate tracking | `List<String>` rebuilt via stream | `int[]` compacted in-place |
-| Top-K selection | Sort all N → O(N log N) | Min-heap of K → O(N log K) |
-
-**The hot-path filter** goes from HashMap lookups with boxing to direct array indexing:
-
-```java
-// v1 — HashMap in the inner loop
-wordLetterCounts.getOrDefault(letter, 0) < minCount.get(letter)
-
-// v2 — array access, zero allocations
-letterCounts[idx][c] < minCount[c]   // c = letter - 'a'
-```
-
-**New:** `analyze` command showing letter coverage and best letter per position.
-
----
-
-### v3 — Entropy Scoring
-
-Replaces the frequency heuristic with an information-theoretic scoring model
-when the candidate pool is small enough for it to run in time.
-
-#### How entropy scoring works
-
-Every guess produces one of 3⁵ = 243 possible result patterns (every combination
-of 🟩🟨⬛ across the 5 positions). For a given guess, simulate what pattern it
-would produce against each remaining candidate. Count how many candidates fall
-into each bucket.
-
-A perfect guess splits candidates into 243 equal buckets of size 1.
-A useless guess drops all candidates into one bucket and tells you nothing.
-
-```
-H(guess) = Σ [ count · log(R / count) ] / R
-
-  R     = total remaining candidates
-  count = size of each non-empty bucket
-  H     = entropy in bits (higher = more information gained)
-```
 
 #### Reading the entropy output
 
@@ -288,9 +205,3 @@ All stable in Java 21 — no actual preview features required:
 | Text blocks | Java 15 | Multi-line help text with `""" ... """` |
 | `var` inference | Java 10 | `var recs = solver.getRecommendations(7)` |
 | `List.of()` | Java 9 | Immutable single-element return value |
-
----
-
-## License
-
-MIT
