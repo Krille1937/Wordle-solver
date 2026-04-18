@@ -17,7 +17,6 @@ Built as a learning project, so every design decision is explained in the source
 - **Letter analysis panel** — coverage % per letter, best letter per position
 - **Timing output** on every filter and score operation
 - **An in the makings website for easier UI** https://github.com/Krille1937/Wordle-Solver-Website
-                                            - https://krille1937.github.io/Wordle-Solver-Website/
 
 ---
 
